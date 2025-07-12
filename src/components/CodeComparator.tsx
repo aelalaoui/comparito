@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CodeEditor from './CodeEditor';
 import DiffViewer from './DiffViewer';
 import Toolbar from './Toolbar';
@@ -44,6 +44,27 @@ function divide(x, y) {
   const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
   const [language, setLanguage] = useState('javascript');
   const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
+
+  // Ajout des refs et états pour la synchro du scroll
+  const leftEditorRef = useRef<HTMLTextAreaElement>(null);
+  const rightEditorRef = useRef<HTMLTextAreaElement>(null);
+  const [leftScroll, setLeftScroll] = useState<{ top?: number; left?: number }>({});
+  const [rightScroll, setRightScroll] = useState<{ top?: number; left?: number }>({});
+  const isSyncingScroll = useRef(false);
+
+  // Gestion du scroll synchronisé
+  const handleLeftScroll = (scrollTop: number, scrollLeft: number) => {
+    if (isSyncingScroll.current) return;
+    isSyncingScroll.current = true;
+    setRightScroll({ top: scrollTop, left: scrollLeft });
+    setTimeout(() => { isSyncingScroll.current = false; }, 10);
+  };
+  const handleRightScroll = (scrollTop: number, scrollLeft: number) => {
+    if (isSyncingScroll.current) return;
+    isSyncingScroll.current = true;
+    setLeftScroll({ top: scrollTop, left: scrollLeft });
+    setTimeout(() => { isSyncingScroll.current = false; }, 10);
+  };
 
   useEffect(() => {
     const diff = calculateDiff(leftCode, rightCode);
@@ -92,12 +113,15 @@ function divide(x, y) {
               </h3>
             </div>
             <CodeEditor
+              ref={leftEditorRef}
               value={leftCode}
               onChange={setLeftCode}
               language={language}
               lineNumbers={true}
               diffLines={diffResult?.leftDiffs}
               title="Version Originale"
+              onScroll={handleLeftScroll}
+              scrollTo={leftScroll}
             />
           </div>
           <div className="flex-1">
@@ -108,12 +132,15 @@ function divide(x, y) {
               </h3>
             </div>
             <CodeEditor
+              ref={rightEditorRef}
               value={rightCode}
               onChange={setRightCode}
               language={language}
               lineNumbers={true}
               diffLines={diffResult?.rightDiffs}
               title="Version Modifiée"
+              onScroll={handleRightScroll}
+              scrollTo={rightScroll}
             />
           </div>
         </div>

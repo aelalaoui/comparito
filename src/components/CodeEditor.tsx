@@ -9,16 +9,20 @@ interface CodeEditorProps {
   lineNumbers?: boolean;
   diffLines?: DiffLine[];
   title?: string;
+  onScroll?: (scrollTop: number, scrollLeft: number) => void;
+  scrollTo?: { top?: number; left?: number };
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({
+const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>(({
   value,
   onChange,
   language,
   lineNumbers = true,
   diffLines = [],
-  title = ''
-}) => {
+  title = '',
+  onScroll,
+  scrollTo
+}, ref) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
@@ -38,38 +42,53 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (scrollTo && textareaRef.current) {
+      if (typeof scrollTo.top === 'number') {
+        textareaRef.current.scrollTop = scrollTo.top;
+        if (lineNumbersRef.current) lineNumbersRef.current.scrollTop = scrollTo.top;
+        if (backgroundRef.current) backgroundRef.current.scrollTop = scrollTo.top;
+      }
+      if (typeof scrollTo.left === 'number') {
+        textareaRef.current.scrollLeft = scrollTo.left;
+        if (backgroundRef.current) backgroundRef.current.scrollLeft = scrollTo.left;
+      }
+    }
+  }, [scrollTo]);
+
   // Enhanced scroll synchronization
   useEffect(() => {
     const textarea = textareaRef.current;
     const lineNumbers = lineNumbersRef.current;
     const background = backgroundRef.current;
-    
     if (!textarea || !lineNumbers || !background) return;
-    
     const syncScroll = (source: HTMLElement) => {
       const scrollTop = source.scrollTop;
+      const scrollLeft = source.scrollLeft;
       setScrollTop(scrollTop);
-      
-      // Only sync if the scroll values are different to prevent infinite loops
+      if (onScroll) onScroll(scrollTop, scrollLeft);
       if (lineNumbers && lineNumbers.scrollTop !== scrollTop) {
         lineNumbers.scrollTop = scrollTop;
       }
       if (background && background.scrollTop !== scrollTop) {
         background.scrollTop = scrollTop;
       }
+      if (background && background.scrollLeft !== scrollLeft) {
+        background.scrollLeft = scrollLeft;
+      }
+      if (textarea && textarea.scrollLeft !== scrollLeft) {
+        textarea.scrollLeft = scrollLeft;
+      }
     };
-    
     const handleTextareaScroll = () => syncScroll(textarea);
     const handleLineNumbersScroll = () => syncScroll(lineNumbers);
-    
     textarea.addEventListener('scroll', handleTextareaScroll, { passive: true });
     lineNumbers.addEventListener('scroll', handleLineNumbersScroll, { passive: true });
-    
     return () => {
       textarea.removeEventListener('scroll', handleTextareaScroll);
       lineNumbers.removeEventListener('scroll', handleLineNumbersScroll);
     };
-  }, []);
+  }, [onScroll]);
 
   const getDiffClass = (lineIndex: number) => {
     const diffLine = diffLines.find(d => d.lineNumber === lineIndex + 1);
@@ -187,16 +206,21 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       </button>
 
       {lineNumbers && renderLineNumbers()}
-      
       <div className="flex-1 relative overflow-hidden">
         {/* Background highlighting */}
         {renderBackground()}
-        
         {/* Code textarea */}
         <textarea
-          ref={textareaRef}
+          ref={(el) => {
+            textareaRef.current = el;
+            if (typeof ref === 'function') ref(el);
+            else if (ref) (ref as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+          }}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onScroll={() => {
+            if (textareaRef.current && onScroll) onScroll(textareaRef.current.scrollTop, textareaRef.current.scrollLeft);
+          }}
           className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 relative z-20 scrollbar-hide"
           style={{
             fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
@@ -215,6 +239,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default CodeEditor;
