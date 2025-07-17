@@ -1,23 +1,76 @@
-<!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Comparateur de Code en Ligne - Outil de Diff Side-by-Side</title>
-    <meta name="description" content="Comparateur de code professionnel en ligne avec édition en temps réel. Comparez vos fichiers côte à côte avec numérotation des lignes et détection automatique des différences." />
-    <meta name="keywords" content="comparateur code, diff tool, side by side, éditeur code, compare files, développement, programmation" />
-    <meta name="author" content="CodeCompare" />
-    <meta property="og:title" content="Comparateur de Code en Ligne - Outil de Diff Side-by-Side" />
-    <meta property="og:description" content="Comparez vos fichiers de code facilement avec notre outil professionnel. Édition en temps réel et détection automatique des différences." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Comparateur de Code en Ligne" />
-    <meta name="twitter:description" content="Outil professionnel de comparaison de code avec édition en temps réel" />
-    <link rel="canonical" href="https://codecompare.dev" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content=
+  "text/html; charset=utf-8">
+  <meta name="theme-color" content="#08C988">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Online Text Compare">
+  <title>Online Text Compare - Find text differences between two
+  files</title>
+  <meta name="Description" content=
+  "FREE two-way text diff and merge tool. No Signup required. Nothing to install. All comparisons are 100% private, secure and happens locally right in your web browser">
+  <meta name="keywords" content=
+  "Online Text Compare - Find text differences between two files">
+  <meta name="viewport" content=
+  "width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="./css/codemirror.css">
+  <link rel="stylesheet" type="text/css" href="./css/merge.css">
+  <script src="./js/codemirror.js"></script>
+  <script src="./js/diff_match_patch.js"></script>
+  <script src="./js/merge.js"></script>
+
+  <link rel="stylesheet" href="./css/generic.css">
+  <style>
+    #view {
+        width: 90%;
+    }
+    #container:fullscreen #view {
+        width: 100%;
+    }
+    #container:fullscreen .CodeMirror-merge, #container:fullscreen .CodeMirror-merge .CodeMirror {
+        height: 95vh;
+    }
+    #viewHeader {
+        width:90%;padding:10px;margin:8px auto 16px auto;text-align:center;
+    }
+    @media (max-width: 1250px) {
+        #fs { visibility: hidden; }
+        #viewHeader {margin:auto;text-align:center;height:40px;}
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="viewHeader"></div>
+    <div id="diffPanel" style="padding:10px;margin:auto;"></div>
+  </div>
+  <div class="wrapper" style="margin-top: 0px;">
+  </div>
+  <script type="text/javascript">
+  var leftContent = `Hello!
+  Paste one version of text here...
+  Use the red and green arrows to merge the differences`;
+  var rightContent = `Hello!
+  Paste the new version of text here...
+  Use the red and green arrows to merge the differences`;
+
+  var target = document.getElementById("diffPanel");
+  CodeMirror.MergeView(target, {
+    value: leftContent,
+    origLeft: null,
+    orig: rightContent,
+    lineNumbers: true,
+    mode: "text/html",
+    showDifferences: true,
+    connect: 'align',
+    collapseIdentical: false,
+    revertButtons: true,
+    allowEditingOriginals: true,
+    chunkClassLocation: ['background', 'wrap', 'gutter']
+  });
+  </script> 
+  <script src="./js/button-events.js"></script>
+</body>
 </html>
